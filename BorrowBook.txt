@@ -1,0 +1,47 @@
+CREATE PROCEDURE BorrowBook (
+	@IdBorrow int, 
+	@IdReader int, 
+	@IdEmployee int,
+	@IdBook int, 
+	@Result int OUTPUT
+) AS
+BEGIN
+	IF EXISTS (SELECT IdBorrow FROM Borrows WHERE IdBorrow=@IdBorrow)
+	BEGIN
+		select @Result = 1; --This Id borrow does not exist
+	END
+	ELSE IF NOT EXISTS (SELECT IdReader FROM Readers WHERE IdReader=@IdReader)
+	BEGIN
+		select @Result = 2; --This Id reader does not exist
+	END
+	ELSE IF NOT EXISTS (SELECT IdEmployee FROM Employees WHERE IdEmployee=@IdEmployee)
+	BEGIN
+		select @Result = 3; --This Id employee does not exist
+	END
+	ELSE IF NOT EXISTS (SELECT IdBook FROM Books WHERE IdBook=@IdBook)
+	BEGIN
+		select @Result = 4; --This Id book does not exist
+	END
+	ELSE IF NOT ((SELECT QtyAvailableBooks FROM Books WHERE IdBook=@IdBook) > 0)
+	BEGIN
+		select @Result = 5; --No matching books
+
+	END
+	ELSE
+	BEGIN
+		select @Result = 0; -- success
+		insert into Borrows 
+		(IdBorrow, IdReader, IdIssuingEmployee, DateOfBorrow)
+		values(@IdBorrow, @IdReader, @IdEmployee, GETDATE())
+
+		insert into BorrowedBooks
+		(IdBorrow, IdBook)
+		values(@IdBorrow, @IdBook)
+
+		update Books
+		set QtyOfBorrows += 1,
+		QtyBorrowedBooks += 1,
+		QtyAvailableBooks -= 1
+		where IdBook = @IdBook
+	END
+END;
