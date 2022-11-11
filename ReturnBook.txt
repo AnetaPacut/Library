@@ -1,0 +1,37 @@
+CREATE PROCEDURE ReturnBook (
+	@IdBorrow int, 
+	@IdReader int, 
+	@IdEmployee int,
+	@IdBook int, 
+	@Result int OUTPUT
+) AS
+BEGIN
+	IF NOT EXISTS	(SELECT w.IdBorrow 
+					from Borrows w
+					left join BorrowedBooks wk on wk.IdBorrow = w.IdBorrow
+					WHERE w.IdBorrow=@IdBorrow 
+					and w.IdReader=@IdReader
+					and wk.IdBook=@IdBook)
+	BEGIN
+		select @Result = 1; --A borrow with these parameters does not exist
+	END
+	ELSE IF NOT EXISTS (SELECT IdEmployee FROM Employees WHERE IdEmployee=@IdEmployee)
+	BEGIN
+		select @Result = 2; --This Id employee does not exist
+	END
+	ELSE
+	BEGIN
+		select @Result = 0; -- success
+		update Borrows 
+		set IdReceivingEmployee = @IdEmployee,
+		DateOfBorrow = GETDATE()
+		where IdBorrow = @IdBorrow
+
+		update Books
+		set QtyBorrowedBooks -= 1, 
+		QtyAvailableBooks += 1
+		where IdBook = @IdBook
+		
+		delete from BorrowedBooks where IdBorrow=@IdBorrow
+	END
+END;

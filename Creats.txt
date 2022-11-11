@@ -1,0 +1,52 @@
+create table Books
+(
+IdBook int IDENTITY(1,1) primary key,
+Title varchar(8000) not null,
+Author varchar(8000),
+PublishingHouse varchar(8000),
+ReleaseDate date,
+QtyOfBorrows int default 0,
+QtyBorrowedBooks int default 0,
+QtyAvailableBooks int not null
+)
+
+create table Employees
+(
+IdEmployee int IDENTITY(1,1) primary key,
+EmployeeName varchar(8000) not null,
+EmployeeSurname varchar(8000) not null,
+DateOfBirth date check (datediff(year, DateOfBirth, getdate()) > 18),
+EMail varchar(8000) not null,
+PhoneNumber varchar(8000) not null,
+DateOfEmployment date default getdate(),
+Town varchar(8000),
+ZipCode int,
+Street varchar(8000)
+)
+
+create table Readers
+(
+IdReader int IDENTITY(1,1) primary key,
+ReaderName varchar(8000) not null,
+ReaderSurname varchar(8000) not null,
+DateOfBirth date check (datediff(year, DateOfBirth, getdate()) > 18),
+EMail varchar(8000) not null,
+PhoneNumber varchar(8000) not null,
+Town varchar(8000),
+)
+
+create table Borrows
+(
+IdBorrow int PRIMARY KEY,
+IdReader int FOREIGN KEY REFERENCES Readers(IdReader),
+IdIssuingEmployee int FOREIGN KEY REFERENCES Employees(IdEmployee),
+DateOfBorrow date default getdate(),
+IdReceivingEmployee int FOREIGN KEY REFERENCES Employees(IdEmployee),
+DateOfReturn date
+)
+
+create table BorrowedBooks
+(
+IdBorrow int FOREIGN KEY REFERENCES Borrows(IdBorrow),
+IdBook int FOREIGN KEY REFERENCES Books(IdBook)
+)
